@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Realtime Database Firebase</title>
+  <meta charset="UTF-8" />
+  <title>Realtime Database Firebase - Otimizado</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -31,8 +31,8 @@
 <body>
   <h1>Gerenciar Usuários (Realtime Database)</h1>
 
-  <input type="text" id="nome" placeholder="Nome">
-  <input type="number" id="idade" placeholder="Idade">
+  <input type="text" id="nome" placeholder="Nome" />
+  <input type="number" id="idade" placeholder="Idade" />
   <button onclick="salvarUsuario()">Salvar</button>
 
   <table>
@@ -46,19 +46,19 @@
     <tbody id="tabelaUsuarios"></tbody>
   </table>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
-    <script>
+  <script>
     const firebaseConfig = {
-        apiKey: "AIzaSyBUiyLpgZICMXq0nKEctwlHsNI1shLoR3Q",
-        authDomain: "meu-projeto-web-6e845.firebaseapp.com",
-        databaseURL: "https://meu-projeto-web-6e845-default-rtdb.firebaseio.com/",
-        projectId: "meu-projeto-web-6e845",
-        storageBucket: "meu-projeto-web-6e845.firebasestorage.app",
-        messagingSenderId: "654986756234",
-        appId: "1:654986756234:web:4b9a6e770e12f3fba9ad73",
-        measurementId: "G-LQV08LSPH7"
+      apiKey: "AIzaSyBUiyLpgZICMXq0nKEctwlHsNI1shLoR3Q",
+      authDomain: "meu-projeto-web-6e845.firebaseapp.com",
+      databaseURL: "https://meu-projeto-web-6e845-default-rtdb.firebaseio.com/",
+      projectId: "meu-projeto-web-6e845",
+      storageBucket: "meu-projeto-web-6e845.firebasestorage.app",
+      messagingSenderId: "654986756234",
+      appId: "1:654986756234:web:4b9a6e770e12f3fba9ad73",
+      measurementId: "G-LQV08LSPH7"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -67,78 +67,90 @@
 
     let usuarioEditando = null;
 
-    function salvarUsuario() {
-        const nome = document.getElementById("nome").value.trim();
-        const idade = document.getElementById("idade").value.trim();
-
-        if (!nome || !idade) {
-        alert("Preencha todos os campos.");
-        return;
-        }
-
-        const dados = { nome, idade: Number(idade) };
-
-        if (usuarioEditando !== null) {
-        usuariosRef.child(usuarioEditando).set(dados).then(() => {
-            usuarioEditando = null;
-            document.getElementById("nome").value = "";
-            document.getElementById("idade").value = "";
-        });
-        } else {
-        // Buscar maior ID existente
-        usuariosRef.once("value", snapshot => {
-            let maiorID = -1;
-            snapshot.forEach(child => {
-            const idAtual = parseInt(child.key);
-            if (!isNaN(idAtual) && idAtual > maiorID) {
-                maiorID = idAtual;
-            }
-            });
-
-            const novoID = (maiorID + 1).toString();
-
-            usuariosRef.child(novoID).set(dados).then(() => {
-            document.getElementById("nome").value = "";
-            document.getElementById("idade").value = "";
-            });
-        });
-        }
-    }
-
-    // Listar e renderizar tabela
-    usuariosRef.on("value", snapshot => {
+    // Função para carregar e renderizar usuários (uma única vez)
+    function carregarUsuarios() {
+      usuariosRef.once("value").then(snapshot => {
         const tabela = document.getElementById("tabelaUsuarios");
         tabela.innerHTML = "";
 
         snapshot.forEach(child => {
-        const id = child.key;
-        const usuario = child.val();
+          const id = child.key;
+          const usuario = child.val();
 
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
             <td>${usuario.nome}</td>
             <td>${usuario.idade}</td>
             <td>
-            <button onclick="editarUsuario('${id}', '${usuario.nome}', ${usuario.idade})">Editar</button>
-            <button onclick="deletarUsuario('${id}')">Excluir</button>
+              <button onclick="editarUsuario('${id}', '${usuario.nome}', ${usuario.idade})">Editar</button>
+              <button onclick="deletarUsuario('${id}')">Excluir</button>
             </td>
-        `;
-        tabela.appendChild(tr);
+          `;
+          tabela.appendChild(tr);
         });
-    });
+      });
+    }
+
+    function salvarUsuario() {
+      const nome = document.getElementById("nome").value.trim();
+      const idade = document.getElementById("idade").value.trim();
+
+      if (!nome || !idade) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      const dados = { nome, idade: Number(idade) };
+
+      if (usuarioEditando !== null) {
+        usuariosRef.child(usuarioEditando).set(dados).then(() => {
+          usuarioEditando = null;
+          document.getElementById("nome").value = "";
+          document.getElementById("idade").value = "";
+          carregarUsuarios();
+        });
+      } else {
+        usuariosRef.once("value").then(snapshot => {
+          let maiorID = -1;
+          snapshot.forEach(child => {
+            const idAtual = parseInt(child.key);
+            if (!isNaN(idAtual) && idAtual > maiorID) {
+              maiorID = idAtual;
+            }
+          });
+
+          const novoID = (maiorID + 1).toString();
+
+          usuariosRef.child(novoID).set(dados).then(() => {
+            document.getElementById("nome").value = "";
+            document.getElementById("idade").value = "";
+            carregarUsuarios();
+          });
+        });
+      }
+    }
 
     function editarUsuario(id, nome, idade) {
-        document.getElementById("nome").value = nome;
-        document.getElementById("idade").value = idade;
-        usuarioEditando = id;
+      document.getElementById("nome").value = nome;
+      document.getElementById("idade").value = idade;
+      usuarioEditando = id;
     }
 
     function deletarUsuario(id) {
-        if (confirm("Deseja realmente excluir este usuário?")) {
-        usuariosRef.child(id).remove();
-        }
+      if (confirm("Deseja realmente excluir este usuário?")) {
+        usuariosRef.child(id).remove().then(() => {
+          if (usuarioEditando === id) {
+            usuarioEditando = null;
+            document.getElementById("nome").value = "";
+            document.getElementById("idade").value = "";
+          }
+          carregarUsuarios();
+        });
+      }
     }
-    </script>
 
+    // Carregar usuários uma vez ao iniciar
+    carregarUsuarios();
+  </script>
 </body>
 </html>
