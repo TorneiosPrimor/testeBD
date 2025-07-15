@@ -69,7 +69,7 @@
 
     // Função para carregar e renderizar usuários (uma única vez)
     function carregarUsuarios() {
-      usuariosRef.once("value").then(snapshot => {
+      usuariosRef.on("value", snapshot => {
         const tabela = document.getElementById("tabelaUsuarios");
         tabela.innerHTML = "";
 
@@ -90,6 +90,7 @@
         });
       });
     }
+
 
     function salvarUsuario() {
       const nome = document.getElementById("nome").value.trim();
